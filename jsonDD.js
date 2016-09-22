@@ -120,10 +120,10 @@ function ddFindIndex(ddSelect) { // Find group index
 }
 
 function ddLabel(ddSelect, ddText) { // Insert label to top of drop-down and display
-    if ((typeof ddSelect.options[0] === 'undefined') || (ddSelect.options[0].text !== ddText)) {
+    if ((typeof ddSelect.options[0] === 'undefined') || (ddSelect.options.length === 0) || (ddSelect.options[0].textContent !== ddText)) {
         var newOption = document.createElement('option');
 
-        newOption.text = ddText;
+        newOption.textContent = ddText;
         newOption.disabled = true;
 
         ddSelect.insertBefore(newOption, ddSelect.firstChild);
@@ -162,7 +162,8 @@ function ddCSS() { // Refreshes visuals for main (first) drop-down
 
       if ((ddYear[0].selectedIndex !== 0) && (ddMake[0].selectedIndex === 0) && makeUndefined) { ddShowCheck(eMakes, eYears); }
       else if (((typeof ddMake[0].selectedIndex === 'number') && (ddMake[0].length > 1)) && (ddModel[0].selectedIndex === 0)) {
-        ddShowCheck(eModels, (makeUndefined ? eMakes : eYears));
+        if (ddYear[0].dataset.display === 'Product') { ddShowCheck(eMakes, eYears); }
+        ddShowCheck(eModels, eMakes);
       }
     }
   }
@@ -170,9 +171,9 @@ function ddCSS() { // Refreshes visuals for main (first) drop-down
 
 function ddPreSelect(ddSelect) { // Pre-select drop-down value if possible
   var optionLen = ddSelect.options.length;
-
+  
   for (var ddIndex = 0; ddIndex < optionLen; ddIndex++) {
-    if (ddSelect.options[ddIndex].text === ddSelect.dataset[ddSelect.dataset.type]) {
+    if (ddSelect.options[ddIndex].textContent === ddSelect.dataset[ddSelect.dataset.type]) {
       ddSelect.value = ddSelect.options[ddIndex].value; // Change DD to data-[make/model/year]="#"
       ddChange({ target: ddSelect });
     }
@@ -217,7 +218,7 @@ function ddAddOption(ddSelect, optionValue, optionText) { // Add option to drop-
   var newOption = document.createElement('option');
 
   newOption.value = optionValue;
-  newOption.text = ((typeof optionText === 'undefined') ? optionValue : optionText);
+  newOption.textContent = ((typeof optionText === 'undefined') ? optionValue : optionText);
 
   ddSelect.add(newOption);
 }
@@ -231,7 +232,7 @@ function ddPopular(ddSelect) { // Sort makes based on popularity list
   ;
 
   for (var ddIndex = 0; ddIndex < ddEnd; ddIndex++) {
-    if (popularMakes.indexOf(ddSelect.options[ddIndex].text) < 0) { groupOther.appendChild(ddSelect.options[ddIndex].cloneNode(true)); }
+    if (popularMakes.indexOf(ddSelect.options[ddIndex].textContent) < 0) { groupOther.appendChild(ddSelect.options[ddIndex].cloneNode(true)); }
     else { groupPopular.appendChild(ddSelect.options[ddIndex].cloneNode(true)); }
   }
 
@@ -276,11 +277,11 @@ function ddChange(e) { // Update drop-down group after a change
       var modelOptions = filterData(ddModel[groupIndex], ddYear[groupIndex].value, ddSelect.value).sort();
       
       ddEmpty(ddModel[groupIndex]);
-
+        
       for (var optionIndex = 0; optionIndex < modelOptions.length; optionIndex++) {
-        var currModelId = modelByName[makeById[ddSelect.value]][modelOptions[optionIndex]]
+        var currModelId = modelByName[makeById[ddSelect.value]][modelOptions[optionIndex]];
 
-        if ((typeof ddModel[groupIndex].dataset.model === 'undefined') || (ddModel[groupIndex].dataset.model === modelOptions[optionIndex])) {
+        if ((typeof ddMake[groupIndex].dataset.make === 'undefined') || (typeof ddModel[groupIndex].dataset.model === 'undefined') || (ddModel[groupIndex].dataset.model === modelOptions[optionIndex])) {
           ddAddOption(ddModel[groupIndex], currModelId, modelOptions[optionIndex]);
         } else {
           var ModelId = modelByName[ddMake[groupIndex].dataset.make][ddModel[groupIndex].dataset.model];
@@ -291,7 +292,7 @@ function ddChange(e) { // Update drop-down group after a change
         }
       };
 
-      if ((typeof ddModel[groupIndex].dataset.model === 'undefined') || (ddModel[groupIndex].options.length > 1) || (ddModel[groupIndex].options.length === 1 && ddModel[groupIndex].options[0].text !== ddModel[groupIndex].dataset.model)) {
+      if ((typeof ddModel[groupIndex].dataset.model === 'undefined') || (ddModel[groupIndex].options.length > 1) || (ddModel[groupIndex].options.length === 1 && ddModel[groupIndex].options[0].textContent !== ddModel[groupIndex].dataset.model)) {
         ddLabel(ddModel[groupIndex], 'Model');
         ddCSS();
       } else { ddPreSelect(ddModel[groupIndex]); }
@@ -305,9 +306,9 @@ function ddChange(e) { // Update drop-down group after a change
       ;
       
       if (typeof Product === 'string') {
-          if (isNaN(Product)) { redirectURL = '../' + Product.replace('Neo-Supreme', 'Neoprene').replace('Mesh', 'Super-Mesh') + '-Seat-Covers-for-' + ddYear[groupIndex].value + '-' + encodeURIComponent(ddMake[groupIndex].options[ddMake[groupIndex].selectedIndex].text + '-' + ddSelect.options[ddSelect.selectedIndex].text).replace(/%20/g, '-').replace(/%2F/g, '') + '.asp'; }
+        if (isNaN(Product)) { redirectURL = '../' + Product.replace('Neo-Supreme', 'Neoprene').replace('Mesh', 'Super-Mesh') + '-Seat-Covers-for-' + ddYear[groupIndex].value + '-' + encodeURIComponent(ddMake[groupIndex].options[ddMake[groupIndex].selectedIndex].textContent + '-' + ddSelect.options[ddSelect.selectedIndex].textContent).replace(/%20/g, '-').replace(/%2F/g, '') + '.asp'; }
         else { redirectURL = '../Seat-Options/' + Product + '/' + ddSelect.value + '/' + ddYear[groupIndex].value + '/' + ((ColorId > 0) ? ColorId : '0'); }
-      } else { redirectURL = '../Seat-Covers-for-' + ddYear[groupIndex].value + '-' + encodeURIComponent(ddMake[groupIndex].options[ddMake[groupIndex].selectedIndex].text + '-' + ddSelect.options[ddSelect.selectedIndex].text).replace(/%20/g, '-').replace(/%2F/g, ''); }
+      } else { redirectURL = '../Seat-Covers-for-' + ddYear[groupIndex].value + '-' + encodeURIComponent(ddMake[groupIndex].options[ddMake[groupIndex].selectedIndex].textContent + '-' + ddSelect.options[ddSelect.selectedIndex].textContent).replace(/%20/g, '-').replace(/%2F/g, ''); }
 
       if ((typeof ddYear[0].dataset.year === 'string') && (typeof ddMake[0].dataset.make === 'string') && (typeof ddModel[0].dataset.model === 'string') && document.getElementById('ModelSelectViewPrices')) {
         var btnViewPrices = document.getElementById('ModelSelectViewPrices');
@@ -327,8 +328,8 @@ function querySelection() {
   var queryString = window.location.search.substring(1).split(/=|&/);
 
   if (queryString.indexOf('Year') > -1) { for (var ddIndex = 0; ddIndex < ddYear.length; ddIndex++) { ddYear[ddIndex].dataset.year = queryString[queryString.indexOf('Year') + 1]; } }
-  if (queryString.indexOf('Make') > -1) { for (var ddIndex = 0; ddIndex < ddMake.length; ddIndex++) { ddMake[ddIndex].dataset.make = queryString[queryString.indexOf('Make') + 1]; } }
-  if (queryString.indexOf('Model') > -1) { for (var ddIndex = 0; ddIndex < ddModel.length; ddIndex++) { ddModel[ddIndex].dataset.model = queryString[queryString.indexOf('Model') + 1]; } }
+  if (queryString.indexOf('Make') > -1) { for (var ddIndex = 0; ddIndex < ddMake.length; ddIndex++) { ddMake[ddIndex].dataset.make = queryString[queryString.indexOf('Make') + 1].replace(/%20/, ' '); } }
+  if (queryString.indexOf('Model') > -1) { for (var ddIndex = 0; ddIndex < ddModel.length; ddIndex++) { ddModel[ddIndex].dataset.model = queryString[queryString.indexOf('Model') + 1].replace(/%20/, ' '); } }
 }
 
 function processData(jsonData) {
@@ -360,13 +361,12 @@ function processData(jsonData) {
   for (var ddIndex = 0; ddIndex < ddYear.length; ddIndex++) {
     var
       SupplierId = ((typeof ddYear[ddIndex].dataset.supplier === 'undefined') ? 0 : ddYear[ddIndex].dataset.supplier),
-      MakeId = ((typeof ddMake[ddIndex].dataset.make === 'undefined') ? 0 : makeByName[ddMake[ddIndex].dataset.make]),
-      ModelId = ((typeof ddModel[ddIndex].dataset.model === 'undefined') ? 0 : modelByName[ddMake[ddIndex].dataset.make][ddModel[ddIndex].dataset.model])
+      MakeId = ((typeof ddMake[ddIndex].dataset.make === 'undefined') ? 0 : makeByName[ddMake[ddIndex].dataset.make.replace(/%20/, ' ')]),
+      ModelId = (((typeof ddModel[ddIndex].dataset.model !== 'undefined') && (typeof ddMake[ddIndex].dataset.make !== 'undefined')) ? modelByName[ddMake[ddIndex].dataset.make.replace(/%20/, ' ')][ddModel[ddIndex].dataset.model.replace(/%20/, ' ')] : 0)
     ;
 
     yearOptions[ddIndex] = []; // Init
-
-    for (var yearIndex = 0; yearIndex < arrData.length; yearIndex++) { // Filter years
+    for (var yearIndex = 1900; yearIndex < arrData.length; yearIndex++) { // Filter years
       if (typeof arrData[yearIndex] === 'object') {
         if (SupplierId === 0) { // All Suppliers
           for (var supplierIndex = 0; supplierIndex < arrData[yearIndex].length; supplierIndex++) {
@@ -390,14 +390,10 @@ function processData(jsonData) {
   ddPrepare(ddModel, 'Model');
 
   ddCSS(); // Init
-}
 
-if (ddYear.length > 0) { // Back button DD fix
-    document.addEventListener('DOMContentLoaded', function () {
-        ddYear[0].selectedIndex = 0;
-        ddMake[0].selectedIndex = 0;
-        ddModel[0].selectedIndex = 0;
-    }, false);
+  // Fixes for issues that can't be fixed elsewhere
+  bbFix();
+  cpFix();
 }
 
 (function getJSON(URL) {
@@ -406,5 +402,24 @@ if (ddYear.length > 0) { // Back button DD fix
   objHTTP.addEventListener('load', function (e) { processData(JSON.parse(e.target.response)); });
   objHTTP.open('GET', URL, true);
   objHTTP.send();
-} (jsonURL)); // Init
+}(jsonURL)); // Init
 // ##############################################
+
+function bbFix() { // Fix for DD's not updating if back is pressed
+    if ((ddYear.length > 0) && (typeof ddYear[0].dataset.year === 'undefined')) {
+        document.addEventListener('DOMContentLoaded', function () {
+            ddYear[0].selectedIndex = 0;
+            ddMake[0].selectedIndex = 0;
+            ddModel[0].selectedIndex = 0;
+        }, false);
+    }
+}
+
+function cpFix() { // Fix for JSON pre-select not showing next color DD
+    var sYC = document.getElementById('selectYearsColor');
+
+    if (sYC !== null) {
+        if (sYC.value > 0) { var aMC = document.getElementById('aryMakesColor'); aMC.style.display = "block"; }
+        if (document.getElementById('selectMakesColor').value > 0) { document.getElementById('aryModelsColor').style.display = "block"; }
+    }
+}
